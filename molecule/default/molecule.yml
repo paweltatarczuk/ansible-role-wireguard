@@ -1,0 +1,84 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+lint:
+  name: yamllint
+platforms:
+  - name: server
+    image: jrei/systemd-debian:10
+    capabilities:
+      - NET_ADMIN
+    networks:
+      - name: private
+    privileged: True
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro 
+    command: /lib/systemd/systemd
+  - name: peer1
+    image: jrei/systemd-debian:10
+    capabilities:
+      - NET_ADMIN
+    networks:
+      - name: private
+    privileged: True
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro 
+    command: /lib/systemd/systemd
+  - name: peer2
+    image: jrei/systemd-debian:10
+    capabilities:
+      - NET_ADMIN
+    networks:
+      - name: private
+    privileged: True
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro 
+    command: /lib/systemd/systemd
+provisioner:
+  name: ansible
+  lint:
+    name: ansible-lint
+  inventory:  
+    group_vars:
+      all:
+        wireguard_listen_port: 51820  
+    host_vars:
+      server:
+        wireguard_address: 10.5.0.1/24
+        wireguard_private_key: 0AeTTNBzh3oBGFTNgzUlJmxzpMaYg+dIQ2gsqYHnnWA=
+        wireguard_public_key: 267EdsvO3Jv7FLw259QvMGcRDZivPcCJEe1wfKYTbBE=
+        wireguard_peers:
+          - allowed_ips:
+              - 10.5.0.20/32
+            private_key: yImVha0Ck0gYvsnDpbcHKgFCzaZGfycNPilIVw/yklU=
+            public_key: lJSMCB/NZh+jEju1b0rUcjbmOFGYohM2tyHDBsFUWT0=
+          - allowed_ips:
+              - 10.5.0.21/32
+            private_key: MJjBCV+ek85j7OyINWEmbkfCZYPJsAgdrOxa6aO7Ak4=
+            public_key: zuR446zBG6PuWiLAcZTpSFzIRMpe+MKS6sMBKfTstCY=
+      peer1:
+        wireguard_address: 10.5.0.20/24
+        wireguard_private_key: yImVha0Ck0gYvsnDpbcHKgFCzaZGfycNPilIVw/yklU=
+        wireguard_public_key: lJSMCB/NZh+jEju1b0rUcjbmOFGYohM2tyHDBsFUWT0=
+        wireguard_peers:
+          - allowed_ips:
+              - 10.5.0.0/24
+            public_key: 267EdsvO3Jv7FLw259QvMGcRDZivPcCJEe1wfKYTbBE=
+            endpoint: "{{ hostvars['server']['ansible_default_ipv4']['address' ] }}:{{ hostvars['server']['wireguard_listen_port'] }}"
+            persistent_keepalive: 1
+      peer2:
+        wireguard_address: 10.5.0.21/24
+        wireguard_private_key: MJjBCV+ek85j7OyINWEmbkfCZYPJsAgdrOxa6aO7Ak4=
+        wireguard_public_key: zuR446zBG6PuWiLAcZTpSFzIRMpe+MKS6sMBKfTstCY=
+        wireguard_peers:
+          - allowed_ips:
+              - 10.5.0.0/24
+            public_key: 267EdsvO3Jv7FLw259QvMGcRDZivPcCJEe1wfKYTbBE=
+            endpoint: "{{ hostvars['server']['ansible_default_ipv4']['address' ] }}:{{ hostvars['server']['wireguard_listen_port'] }}"
+            persistent_keepalive: 1
+verifier:
+  name: testinfra
+  lint:
+    name: flake8
