@@ -1,0 +1,18 @@
+{{ ansible_managed | comment}}
+
+[Interface]
+Address = {{ wireguard_address }}
+PrivateKey = {{ wireguard_private_key }}
+ListenPort = {{ wireguard_listen_port }}
+
+{% for peer in wireguard_peers %}
+[Peer]
+PublicKey = {{ peer.public_key }}
+AllowedIPs = {{ peer.allowed_ips | join(', ') }}
+{% if 'endpoint' in peer -%}
+Endpoint = {{ peer.endpoint }}
+{% endif %}
+{% if 'persistent_keepalive' in peer -%}
+PersistentKeepalive = {{ peer.persistent_keepalive }}
+{% endif %}
+{% endfor %}

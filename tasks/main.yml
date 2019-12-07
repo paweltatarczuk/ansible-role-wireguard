@@ -1,0 +1,22 @@
+---
+# tasks file for ansible-role-wireguard
+- name: Ensure wireguard is present
+  apt:
+    name: wireguard
+    state: present
+    default_release: unstable
+
+- name: Check if wireguard interface exists
+  stat:
+    path: /sys/class/net/{{ wireguard_interface_name }}
+  register: wireguard_interface_stat
+
+- name: Ensure wireguard config is present
+  template:
+    src: wireguard.conf.j2
+    dest: /etc/wireguard/{{ wireguard_interface_name }}.conf
+    mode: 0700
+  notify:
+    - Destroy wireguard interface
+    - Configure wireguard interface
+    - Enable wireguard interface

@@ -1,0 +1,13 @@
+---
+# handlers file for ansible-role-wireguard
+- name: Destroy wireguard interface
+  command: wg-quick down {{ wireguard_interface_name }}
+  when: wireguard_interface_stat.stat.exists
+
+- name: Configure wireguard interface
+  command: wg-quick up {{ wireguard_interface_name }}
+
+- name: Enable wireguard interface
+  service:
+    name: wg-quick@{{ wireguard_interface_name }}
+    enabled: True
